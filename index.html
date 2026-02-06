@@ -7,63 +7,62 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
-        :root { --primary: #007bff; --bg: #f8f9fa; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--bg); padding-bottom: 100px; }
+        body { background: #f4f7f6; padding-bottom: 120px; font-family: sans-serif; }
+        .header { background: #007bff; color: white; padding: 20px 10px; border-radius: 0 0 20px 20px; margin-bottom: 20px; }
+        .search-box { border-radius: 25px; padding: 12px 20px; border: none; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         
-        /* Cabeçalho Mobile */
-        .header { background: white; padding: 20px; border-bottom: 1px solid #ddd; position: sticky; top: 0; z-index: 1000; }
+        /* Estilo dos Cards de Busca */
+        .card-exame { border: none; border-radius: 12px; margin-bottom: 10px; cursor: pointer; transition: 0.2s; }
+        .card-exame:active { transform: scale(0.95); }
         
-        /* Barra de Busca */
-        .search-box { border-radius: 15px; border: 2px solid #eee; padding: 12px 20px; font-size: 16px; transition: 0.3s; }
-        .search-box:focus { border-color: var(--primary); box-shadow: none; }
-
-        /* Cards de Exame */
-        .card-exame { border: none; border-radius: 15px; margin-bottom: 12px; transition: 0.2s; cursor: pointer; border-left: 5px solid #ccc; }
-        .card-exame:active { transform: scale(0.98); background: #f0f0f0; }
-        .card-exame.selected { border-left-color: var(--primary); background: #e7f1ff; }
-
-        /* Lista Flutuante (Carrinho) */
-        .floating-list { position: fixed; bottom: 0; left: 0; right: 0; background: white; box-shadow: 0 -5px 20px rgba(0,0,0,0.1); border-top-left-radius: 20px; border-top-right-radius: 20px; padding: 15px; z-index: 2000; }
-        
-        .total-box { display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 1.1rem; }
-        
-        .btn-limpar { font-size: 0.8rem; color: #dc3545; text-decoration: none; }
-        
-        footer { margin-top: 30px; padding: 20px; text-align: center; color: #888; font-size: 0.8rem; }
-        .dev-tag { font-weight: bold; color: var(--primary); }
+        /* Lista de Orçamento (Flutuante) */
+        .orcamento-fixo {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: white; border-top: 2px solid #007bff;
+            padding: 15px; border-radius: 20px 20px 0 0;
+            box-shadow: 0 -5px 15px rgba(0,0,0,0.1); z-index: 1000;
+        }
+        .lista-itens { max-height: 150px; overflow-y: auto; margin-bottom: 10px; font-size: 0.9rem; }
+        .item-selecionado { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #eee; }
+        .btn-limpar { font-size: 0.75rem; color: #dc3545; cursor: pointer; text-decoration: none; }
     </style>
 </head>
 <body>
 
-<div class="header shadow-sm mb-4">
-    <div class="container text-center">
-        <h4 class="mb-2 fw-bold text-dark">🔬 Meus Exames</h4>
-        <input type="text" id="inputBusca" class="form-control search-box" placeholder="Busque por nome ou apelido...">
-        <div id="status" class="mt-2 small text-muted">Aguardando...</div>
+<div class="header text-center">
+    <h4 class="fw-bold">🔬 Buscador de Exames</h4>
+    <div class="container mt-3">
+        <input type="text" id="inputBusca" class="form-control search-box" placeholder="Digite nome ou apelido...">
     </div>
+    <div id="status" class="small mt-2 opacity-75">Carregando base...</div>
 </div>
 
 <div class="container">
     <div id="resultados"></div>
-    
-    <footer>
-        <p>© 2024 Portal de Exames</p>
-        <p>Desenvolvido por <span class="dev-tag">Elijunio & IA</span></p>
-    </footer>
 </div>
 
-<div id="resumoContainer" class="floating-list d-none">
+<div id="painelOrcamento" class="orcamento-fixo d-none">
     <div class="container">
-        <div class="total-box">
-            <span><i class="bi bi-cart3"></i> Selecionados (<span id="count">0</span>)</span>
-            <span>Total: <span id="totalPreco">R$ 0,00</span></span>
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6 class="mb-0 fw-bold">Seu Orçamento:</h6>
+            <a class="btn-limpar" id="btnLimpar">Limpar Tudo</a>
         </div>
-        <div class="d-flex justify-content-between mt-2">
-            <a href="#" class="btn-limpar" id="btnLimpar"><i class="bi bi-trash"></i> Limpar Lista</a>
-            <small class="text-muted">Clique nos exames para selecionar</small>
+        
+        <div id="listaItens" class="lista-itens">
+            </div>
+
+        <div class="d-flex justify-content-between align-items-center border-top pt-2">
+            <span class="fw-bold text-primary">TOTAL:</span>
+            <span class="h5 mb-0 fw-bold text-primary" id="valorTotal">R$ 0,00</span>
         </div>
     </div>
 </div>
+
+<footer>
+    <div class="text-center mt-4 text-muted small">
+        Desenvolvido por <strong>Elijunio & IA</strong>
+    </div>
+</footer>
 
 <script src="script.js"></script>
 </body>
