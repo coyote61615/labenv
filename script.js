@@ -1,94 +1,100 @@
 document.addEventListener('DOMContentLoaded', () => {
     let bancoDados = [];
-    let selecionados = [];
+    let listaOrcamento = [];
 
-    const statusDiv = document.getElementById('status');
     const inputBusca = document.getElementById('inputBusca');
     const containerResultados = document.getElementById('resultados');
-    const resumoContainer = document.getElementById('resumoContainer');
-    const totalPrecoSpan = document.getElementById('totalPreco');
-    const countSpan = document.getElementById('count');
-    const btnLimpar = document.getElementById('btnLimpar');
+    const painelOrcamento = document.getElementById('painelOrcamento');
+    const listaItensDiv = document.getElementById('listaItens');
+    const valorTotalSpan = document.getElementById('valorTotal');
+    const statusDiv = document.getElementById('status');
 
-    const normalizarTexto = (texto) => {
-        return texto ? texto.toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") : "";
-    };
+    // Função para normalizar texto
+    const normalizar = (t) => t ? t.toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") : "";
 
-    // 1. Carregar Banco de Dados
+    // 1. Carrega o JSON
     fetch('exames.json')
         .then(res => res.json())
         .then(data => {
             bancoDados = data;
-            statusDiv.innerHTML = 'Pronto para pesquisar ✅';
-        })
-        .catch(() => statusDiv.innerHTML = 'Erro ao carregar dados ❌');
+            statusDiv.innerText = "Sistema Pronto ✅";
+        }).catch(() => statusDiv.innerText = "Erro ao carregar dados ❌");
 
-    // 2. Lógica de Busca
+    // 2. Busca
     inputBusca.addEventListener('input', (e) => {
-        const termo = normalizarTexto(e.target.value);
+        const termo = normalizar(e.target.value);
         containerResultados.innerHTML = "";
-
         if (termo.length < 2) return;
 
-        const filtrados = bancoDados.filter(item => {
-            return Object.values(item).some(val => normalizarTexto(val).includes(termo));
-        });
+        const filtrados = bancoDados.filter(item => 
+            normalizar(item.exame).includes(termo) || 
+            normalizar(item.apelido || item.codigo).includes(termo)
+        );
 
         filtrados.forEach(item => {
-            const isSelected = selecionados.some(s => s.apelido === (item.codigo || item.apelido));
-            const div = document.createElement('div');
-            div.className = `card card-body card-exame shadow-sm ${isSelected ? 'selected' : ''}`;
-            
-            // Usamos item.codigo como "apelido" se não existir a chave apelido no JSON
-            const apelido = item.apelido || item.codigo || 'S/A';
-
-            div.innerHTML = `
-                <div class="d-flex justify-content-between">
-                    <h6 class="fw-bold mb-1">${item.exame}</h6>
-                    <span class="text-primary fw-bold">R$ ${item.valor}</span>
+            const card = document.createElement('div');
+            card.className = 'card card-body card-exame shadow-sm';
+            card.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="fw-bold text-dark">${item.exame}</div>
+                        <small class="text-muted">Apelido: ${item.apelido || item.codigo}</small>
+                    </div>
+                    <div class="text-primary fw-bold">R$ ${item.valor}</div>
                 </div>
-                <div class="small text-muted mb-1 text-uppercase">Apelido: ${apelido}</div>
-                <div class="small text-secondary" style="font-size: 0.75rem;">${item.preparo}</div>
             `;
-
-            div.onclick = () => alternarSelecao(item, div);
-            containerResultados.appendChild(div);
+            card.onclick = () => adicionarAoOrcamento(item);
+            containerResultados.appendChild(card);
         });
     });
 
-    // 3. Lógica de Seleção e Soma
-    function alternarSelecao(item, elemento) {
-        const index = selecionados.findIndex(s => s.exame === item.exame);
+    // 3. Adicionar e Somar
+    function adicionarAoOrcamento(item) {
+        listaOrcamento.push(item);
+        atualizarInterface();
         
-        if (index > -1) {
-            selecionados.splice(index, 1);
-            elemento.classList.remove('selected');
-        } else {
-            selecionados.push(item);
-            elemento.classList.add('selected');
-        }
-        atualizarResumo();
+        // Feedback visual rápido
+        inputBusca.value = ""; 
+        containerResultados.innerHTML = "";
     }
 
-    function atualizarResumo() {
-        if (selecionados.length > 0) {
-            resumoContainer.classList.remove('d-none');
-            const total = selecionados.reduce((acc, item) => {
-                const valorLimpo = parseFloat(item.valor.toString().replace(',', '.'));
-                return acc + valorLimpo;
-            }, 0);
-            
-            totalPrecoSpan.innerText = total.toLocaleString('pt-br', { style: 'currency', currency: 'BRL' });
-            countSpan.innerText = selecionados.length;
+    function atualizarInterface() {
+        if (listaOrcamento.length > 0) {
+            painelOrcamento.classList.remove('d-none');
         } else {
-            resumoContainer.classList.add('d-none');
+            painelOrcamento.classList.add('d-none');
         }
+
+        // Limpa e reconstrói a lista de itens clicados
+        listaItensDiv.innerHTML = "";
+        let total = 0;
+
+        listaOrcamento.forEach((item, index) => {
+            const valorNumerico = parseFloat(item.valor.toString().replace(',', '.'));
+            total += valorNumerico;
+
+            const div = document.createElement('div');
+            div.className = 'item-selecionado';
+            div.innerHTML = `
+                <span>${item.exame}</span>
+                <span class="text-muted">R$ ${item.valor} 
+                    <i class="bi bi-x-circle text-danger ms-2" onclick="removerItem(${index})"></i>
+                </span>
+            `;
+            listaItensDiv.appendChild(div);
+        });
+
+        valorTotalSpan.innerText = total.toLocaleString('pt-br', { style: 'currency', currency: 'BRL' });
     }
 
-    btnLimpar.onclick = (e) => {
-        e.preventDefault();
-        selecionados = [];
-        atualizarResumo();
-        document.querySelectorAll('.card-exame').forEach(c => c.classList.remove('selected'));
+    // Função para remover um item específico da lista
+    window.removerItem = (index) => {
+        listaOrcamento.splice(index, 1);
+        atualizarInterface();
+    };
+
+    document.getElementById('btnLimpar').onclick = () => {
+        listaOrcamento = [];
+        atualizarInterface();
     };
 });
