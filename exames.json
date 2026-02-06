@@ -1,0 +1,14 @@
+[
+  {
+    "codigo": "123",
+    "exame": "Hemograma",
+    "preparo": "Jejum de 8 horas",
+    "valor": "20,00"
+  },
+  {
+    "codigo": "456",
+    "exame": "Glicóse",
+    "preparo": "Jejum de 12 horas",
+    "valor": "15,00"
+  }
+]
