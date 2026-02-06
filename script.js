@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
             .replace(/[\u0300-\u036f]/g, ""); // Remove os acentos
     };
 
-    const urlDatabase = './database/exames.json';
+    const const urlDatabase = 'exames.json';
 
     fetch(urlDatabase)
         .then(response => {
@@ -70,4 +70,5 @@ document.addEventListener('DOMContentLoaded', () => {
             containerResultados.appendChild(div);
         });
     });
+
 });
